@@ -1,4 +1,4 @@
-const stakingAddress = "0xE22D70b2C754d237cDd7FDccbf5A41BC35D2B7F6";
+const stakingAddress = "0xF2bCf7c36dBe48DAebddFE55Ad3d19021cC4990c";
 var stakingContract;
 
 var userAccount;
@@ -21,116 +21,182 @@ async function login() {
                 alert("Please Connect to Ropsten Network");
             }
         });
+
+        await ethereum.request({ method: 'eth_requestAccounts' })
+        .then(function(result) {
+        userAccount = result[0];
+        });
+
+        $('#login').remove();
+        stakingContract = new web3js.eth.Contract(stakingAbi, stakingAddress);
+        checkNft();
     
-      } else {
-        alert("Please Install Metamask.");
-      }
-  
-  
-      stakingContract = new web3js.eth.Contract(stakingAbi, stakingAddress);
-  
-      await ethereum.request({ method: 'eth_requestAccounts' })
-      .then(function(result) {
-      userAccount = result[0];
-    });
-  
+    } else {
+      alert("Please Install Metamask.");
+    }
+     
 }
 
 
 
-async function buyTokens() {
-  var amountToBuy = icoBuyAmountInput.value;
-
-  var minPurchase;
-  var price;
-  var maxPurchase;
-  var tokensAvailable;
-  var end;
-
-  await icoContract.methods.minPurchase().call({from:userAccount}).then(res => {
-    minPurchase = res / 1000000000000000000;
-  });
-
-  await icoContract.methods.maxPurchase().call({from:userAccount}).then(res => {
-    maxPurchase = res / 1000000000000000000;
-  });
-
-  await icoContract.methods.price().call({from:userAccount}).then(res => {
-    price = res / 1000000000000000000;
-  });
-
-  await icoContract.methods.availableTokensICO().call({from:userAccount}).then(res => {
-    tokensAvailable = res / (10**18);
-  });
-
-  await icoContract.methods.end().call({from:userAccount}).then(res => {
-    if (res - (Date.now() / 1000) < 0) {
-      end = 0;
-    } else {
-      end = res - (Date.now() / 1000);
-    }
+async function checkNft() {
+  
+  var nftHolder;
+  
+  await stakingContract.methods.checkNftHolder().call({from:userAccount}).then(res => {
+    nftHolder = res;
   });
 
 
-
-
-  if (amountToBuy != "") {
-    if (minPurchase <= (amountToBuy * price) <= maxPurchase) {
-      if (amountToBuy < tokensAvailable){
-        if (end > 0) {
-          var sendValue = amountToBuy * price * 1000000000000000000;
-
-          await icoContract.methods.buy().send({from:userAccount, value:sendValue});
-        } else {
-          alert("Already finished.");
-        }
-      } else {
-        alert("Not enough tokens available.");
-      }
-    } else {
-      alert("Not between min and max Purchase.");
-    }
+  if (nftHolder) {
+    $('body').append(`
+      <section class="notHolder" id="nft">
+          <h2 class="notHolder-alert text-center">You do not own any NFTS</h2>
+      </section>
+    `);
   } else {
-    alert("Not a valid Number");
+
+    stakingPools();
+
   }
+
 }
 
-async function checkInfo() {
 
-  var price;
-  var end;
-  var minPurchase;
-  var maxPurchase;
-  var tokensAvailable;
+async function stakingPools() {
 
-  await icoContract.methods.price().call({from:userAccount}).then(res => {
-    price = res / 1000000000000000000;
+  var staker;
+
+  await stakingContract.methods.checkStaker().call({from:userAccount}).then(res => {
+    staker = res;
   });
 
-  await icoContract.methods.end().call({from:userAccount}).then(res => {
-    if (res - (Date.now() / 1000) < 0) {
-      end = 0;
-    } else {
-      end = res - (Date.now() / 1000);
-    }
+  if (staker) {
+    showUnstakingPool();
+  } else {
+    showStakingPools();
+  }
+
+}
+
+async function showStakingPools() {
+
+  var information;
+
+  await stakingContract.methods.getStakingPoolsInformation().call({from:userAccount}).then(res => {
+    information = res;
   });
 
-  await icoContract.methods.minPurchase().call({from:userAccount}).then(res => {
-    minPurchase = res / 1000000000000000000;
+  console.log(information);
+
+  $('body').append(`
+      <div class="cards">
+
+          <div class="staking-card">
+              <div class="staking-card-header">
+                  <h2>MZRO</h2>
+                  <p>Staking Period: 30 days</p>
+                  <p class="earning" id="thirty-earnings">${information[0][0] / (10 ** 9)} MZRO / Day</p>
+              </div>
+
+              <div class="staking-card-body">
+                  <p>APR: <span>${information[0][0] / (10 ** 9) * 365 / information[1] * 100}%</span></p>
+                  <p>Earn: <span>MZRO</span></p>
+                  <p>Stake Amount: <span>${information[1]} MZRO</span></p>
+              </div>
+
+              <div class="staking-card-footer">
+                  <button type="button" class="btn btn-success" id="stake-thirty-btn">Stake</button>
+              </div>
+          </div>
+
+          <div class="staking-card">
+              <div class="staking-card-header">
+                  <h2>MZRO</h2>
+                  <p>Staking Period: 60 days</p>
+                  <p class="earning" id="sixty-earnings">${information[0][1] / (10 ** 9)} MZRO / Day</p>
+              </div>
+
+              <div class="staking-card-body">
+                  <p>APR: <span>${information[0][1] / (10 ** 9) * 365 / information[1] * 100}%</span></p>
+                  <p>Earn: <span>MZRO</span></p>
+                  <p>Stake Amount: <span>${information[1]} MZRO</span></p>
+              </div>
+
+              <div class="staking-card-footer">
+                  <button type="button" class="btn btn-success" id="stake-sixty-btn">Stake</button>
+              </div>
+          </div>
+
+          <div class="staking-card">
+              <div class="staking-card-header">
+                  <h2>MZRO</h2>
+                  <p>Staking Period: 90 days</p>
+                  <p class="earning" id="ninety-earnings">${information[0][2] / (10 ** 9)} MZRO / Day</p>
+              </div>
+
+              <div class="staking-card-body">
+                  <p>APR: <span>${information[0][2] / (10 ** 9) * 365 / information[1] * 100}%</span></p>
+                  <p>Earn: <span>MZRO</span></p>
+                  <p>Stake Amount: <span>${information[1]} MZRO</span></p>
+              </div>
+
+              <div class="staking-card-footer">
+                  <button type="button" class="btn btn-success" id="stake-ninety-btn">Stake</button>
+              </div>
+          </div>
+
+      </div>
+  `);
+
+  $('#stake-thirty-btn').click(async function() {
+    stakingContract.methods.stakeThirty().send({from:userAccount}).on('receipt', () => {
+      location.reload();
+    });
   });
 
-  await icoContract.methods.maxPurchase().call({from:userAccount}).then(res => {
-    maxPurchase = res / 1000000000000000000;
+  $('#stake-sixty-btn').click(async function() {
+    stakingContract.methods.stakeSixty().send({from:userAccount}).on('receipt', () => {
+      location.reload();
+    });
   });
 
-  await icoContract.methods.availableTokensICO().call({from:userAccount}).then(res => {
-    tokensAvailable = res / (10**18);
+  $('#stake-ninety-btn').click(async function() {
+    stakingContract.methods.stakeNinety().send({from:userAccount}).on('receipt', () => {
+      location.reload();
+    });
   });
 
-  icoLeftTokensText.innerText = `Tokens Left: ${tokensAvailable} YOGI`;
-  icoLeftTimeText.innerText = `Time Left: ${Math.floor(end)} Seconds`;
-  icoPriceText.innerText = `Token Price: ${price} BNB / 1 YOGI`;
-  icoPurchaseAmountText.innerText = `Min Purchase: ${minPurchase} BNB - Max Purchase: ${maxPurchase} BNB`;
+}
 
-  setTimeout(1000, checkInfo());
+
+async function showUnstakingPool() {
+
+  $('body').append(`
+      <div class="cards">
+
+          <div class="staking-card">
+              <div class="staking-card-header">
+                  <h2>MZRO</h2>
+                  <p>Staking Period: 30 days</p>
+                  <p class="earning" id="thirty-earnings">0 MZRO / Day</p>
+              </div>
+
+              <div class="staking-card-body">
+                  <p>APR: <span>0%</span></p>
+                  <p>Earn: <span>MZRO</span></p>
+                  <p>Staked Amount: <span>50 MZRO</span></p>
+                  <p>Staking Status: <span>Early Stake</span></p>
+                  <p>Days Staked: <span>0</span></p>
+                  <p>Earned Amount: <span>0 MZRO</span></p>
+              </div>
+
+              <div class="staking-card-footer">
+                  <button type="button" class="btn btn-warning">Unstake</button>
+              </div>
+          </div>
+
+      </div>
+  `);
+
 }

@@ -1922,6 +1922,15 @@ contract stakingContract is Ownable {
         }
     }
 
+    function getStakingPoolsInformation() public view returns (uint256[] memory, uint256) {
+        uint256[] memory poolRewards_ = new uint256[](3);
+        poolRewards_[0] = stakingThirtyDailyReturn;
+        poolRewards_[1] = stakingSixtyDailyReturn;
+        poolRewards_[2] = stakingNinetyDailyReturn;
+        
+        return(poolRewards_, stakeAmount);
+    }
+
     function getRewards() public view returns (uint256) {
         if (block.timestamp < stakersInformation[msg.sender].endTimeStamp) {
 

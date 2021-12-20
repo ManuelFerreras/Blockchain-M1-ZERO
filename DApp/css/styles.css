@@ -11,6 +11,7 @@ body {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     grid-column: 2;
+    font-size: 4vmin;
 }
 
 

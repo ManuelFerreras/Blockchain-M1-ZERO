@@ -1797,7 +1797,7 @@ contract stakingContract is Ownable {
     // Events
     event newStaker(address, uint256, StakingPeriods);
     event earlyUnstakeEvent(address);
-    event unstakeEvent(address, StakingPeriods);
+    event unstakeEvent(address);
 
 
     // Staking Enums
@@ -1830,9 +1830,14 @@ contract stakingContract is Ownable {
         _;
     }
 
+    modifier onlyOnce() {
+        require(!stakersInformation[msg.sender].stakingState, "Already a staker.");
+        _;
+    }
+
 
     // Stake functions
-    function stakeThirty() public onlyNftsHolders {
+    function stakeThirty() public onlyNftsHolders onlyOnce {
         // Check if user has enough tokens to stake.
         require(token.balanceOf(msg.sender) >= stakeAmount, "Not Enough Balance To Stake.");
 
@@ -1846,7 +1851,7 @@ contract stakingContract is Ownable {
         emit newStaker(msg.sender, block.timestamp, StakingPeriods.THIRTY);
     }
 
-    function stakeSixty() public onlyNftsHolders {
+    function stakeSixty() public onlyNftsHolders onlyOnce {
         // Check if user has enough tokens to stake.
         require(token.balanceOf(msg.sender) >= stakeAmount, "Not Enough Balance To Stake.");
 
@@ -1860,7 +1865,7 @@ contract stakingContract is Ownable {
         emit newStaker(msg.sender, block.timestamp, StakingPeriods.SIXTY);
     }
 
-    function stakeNinety() public onlyNftsHolders {
+    function stakeNinety() public onlyNftsHolders onlyOnce {
         // Check if user has enough tokens to stake.
         require(token.balanceOf(msg.sender) >= stakeAmount, "Not Enough Balance To Stake.");
 
@@ -1887,7 +1892,7 @@ contract stakingContract is Ownable {
         token.transfer(msg.sender, rewards_);
 
         // Trigger Event
-        emit unstakeEvent(msg.sender, _info.stakingPeriod);
+        emit unstakeEvent(msg.sender);
 
     }
 
@@ -1909,6 +1914,14 @@ contract stakingContract is Ownable {
         }
     }
 
+    function checkStaker() public view returns (bool) {
+        if (stakersInformation[msg.sender].stakingState) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     function getRewards() public view returns (uint256) {
         if (block.timestamp < stakersInformation[msg.sender].endTimeStamp) {
 
@@ -1921,6 +1934,8 @@ contract stakingContract is Ownable {
             // Rewards calculation
             stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
             rewards_ = stakedDays_.mul(earlyUnstakeDailyReward);
+
+            return rewards_;            
 
         } else {
 
@@ -1943,6 +1958,8 @@ contract stakingContract is Ownable {
             // Rewards calculation
             stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
             rewards_ = stakedDays_.mul(stakingPeriodReward_);
+
+            return rewards_;
 
         }
     }

@@ -10,6 +10,42 @@ body {
     line-height: 10vh;
     text-decoration: underline;
     text-decoration-thickness: 1px;
+    grid-column: 2;
+}
+
+
+/* Account Info */
+.header-info {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    background-color: #393939;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+.header-info button {
+    height: 30%;
+    width: 40%;
+    align-self: center;
+    justify-self: center;
+    padding: 0;
+    border-radius: 32px;
+}
+
+
+/* Not Holder Alert */
+.notHolder {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.notHolder-alert {
+    color: #fafafa;
+    height: 10vh;
+    line-height: 10vh;
+    font-weight: bold;
+    font-size: 4vmin;
 }
 
 
@@ -17,7 +53,7 @@ body {
 .cards {
     display: flex;
     justify-content: space-around;
-    height: 85vh;
+    height: 100vh;
     margin: auto auto;
 }
 
@@ -51,5 +87,9 @@ body {
 .staking-card-footer button {
     margin: 1vmin 0;
     width: 100%;
+    font-weight: bold;
+}
+
+span {
     font-weight: bold;
 }

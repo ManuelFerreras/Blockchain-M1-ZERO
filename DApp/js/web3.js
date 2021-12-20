@@ -1,4 +1,4 @@
-const stakingAddress = "0xF2bCf7c36dBe48DAebddFE55Ad3d19021cC4990c";
+const stakingAddress = "0x6d75DDfDeb030E625323C2CD4b05ABB4584F79E7";
 var stakingContract;
 
 var userAccount;
@@ -71,7 +71,7 @@ async function stakingPools() {
     staker = res;
   });
 
-  if (staker) {
+  if (!staker) {
     showUnstakingPool();
   } else {
     showStakingPools();
@@ -86,8 +86,6 @@ async function showStakingPools() {
   await stakingContract.methods.getStakingPoolsInformation().call({from:userAccount}).then(res => {
     information = res;
   });
-
-  console.log(information);
 
   $('body').append(`
       <div class="cards">
@@ -172,23 +170,47 @@ async function showStakingPools() {
 
 async function showUnstakingPool() {
 
+  var information;
+
+  await stakingContract.methods.getStakerPoolInformation().call({from:userAccount}).then(res => {
+    information = res;
+  });
+
+  console.log(information);
+
+  var stakingPeriod;
+  if (information[1] == 0) {
+    stakingPeriod = '30';
+  } else if (information[1] == 1) {
+    stakingPeriod = '60';
+  } else {
+    stakingPeriod = '90';
+  }
+
+  var early;
+  if (information[0]) {
+    early = 'Completed Staking Period'
+  } else {
+    early = 'Early Stake'
+  }
+
   $('body').append(`
       <div class="cards">
 
           <div class="staking-card">
               <div class="staking-card-header">
                   <h2>MZRO</h2>
-                  <p>Staking Period: 30 days</p>
-                  <p class="earning" id="thirty-earnings">0 MZRO / Day</p>
+                  <p>Staking Period: ${stakingPeriod} days</p>
+                  <p class="earning" id="thirty-earnings">${information[3] / (10 ** 9)} MZRO / Day</p>
               </div>
 
               <div class="staking-card-body">
-                  <p>APR: <span>0%</span></p>
+                  <p>APR: <span>${information[3] / (10 ** 9) * 365 / information[4] * 100}%</span></p>
                   <p>Earn: <span>MZRO</span></p>
                   <p>Staked Amount: <span>50 MZRO</span></p>
-                  <p>Staking Status: <span>Early Stake</span></p>
-                  <p>Days Staked: <span>0</span></p>
-                  <p>Earned Amount: <span>0 MZRO</span></p>
+                  <p>Staking Status: <span>${early}</span></p>
+                  <p>Days Staked: <span>${information[5]} Days</span></p>
+                  <p>Earned Amount: <span>${information[2] / (10 ** 9)} MZRO</span></p>
               </div>
 
               <div class="staking-card-footer">

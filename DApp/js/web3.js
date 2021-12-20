@@ -19,8 +19,8 @@ async function login() {
         web3js = new Web3(window.ethereum);
   
         await web3js.eth.net.getId().then(res => {
-            if (res != 3) {
-                alert("Please Connect to Ropsten Network");
+            if (res != 137) {
+                alert("Please Connect to Polygon Network");
             }
         });
 
@@ -28,6 +28,8 @@ async function login() {
         .then(function(result) {
         userAccount = result[0];
         });
+
+        await showAddress();
 
         $('#login').remove();
         stakingContract = new web3js.eth.Contract(stakingAbi, stakingAddress);
@@ -37,6 +39,16 @@ async function login() {
       alert("Please Install Metamask.");
     }
      
+}
+
+
+async function showAddress() {
+
+  $('#loginBtn').remove();
+  $('#header-info').append(`
+    <p class="account-address">${userAccount.substring(0, 4) + "..." + userAccount.substring(userAccount.length - 6, userAccount.length)}</p>
+  `);
+
 }
 
 

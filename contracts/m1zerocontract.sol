@@ -1849,19 +1849,19 @@ contract stakingContract is Ownable {
 
 
     // Rewards Setter 
-    function setStakingThirtyDailyReturn(uint256 newValue_) onlyOwner {
+    function setStakingThirtyDailyReturn(uint256 newValue_) public onlyOwner {
         stakingThirtyDailyReturn = newValue_;
     }
 
-    function setStakingSixtyDailyReturn(uint256 newValue_) onlyOwner {
+    function setStakingSixtyDailyReturn(uint256 newValue_) public onlyOwner {
         stakingSixtyDailyReturn = newValue_;
     }
 
-    function setStakingNinetyDailyReturn(uint256 newValue_) onlyOwner {
+    function setStakingNinetyDailyReturn(uint256 newValue_) public onlyOwner {
         stakingNinetyDailyReturn = newValue_;
     }
 
-    function setEarlyUnstakeDailyReward(uint256 newValue_) onlyOwner {
+    function setEarlyUnstakeDailyReward(uint256 newValue_) public onlyOwner {
         earlyUnstakeDailyReward = newValue_;
     }
 

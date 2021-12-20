@@ -1,9 +1,11 @@
-const stakingAddress = "0x6d75DDfDeb030E625323C2CD4b05ABB4584F79E7";
+const stakingAddress = "0x230d65Fd723124F1383A2d79683D06f7E3eC4284";
 var stakingContract;
 
 var userAccount;
 
 const loginButton = document.querySelector('#loginBtn');
+const tokenBalance = document.querySelector('#token-balance');
+const nftBalance = document.querySelector('#nft-balance');
 
 
 addEventListener('load', async function() {
@@ -47,13 +49,50 @@ async function checkNft() {
     nftHolder = res;
   });
 
+  var balances;
+  await stakingContract.methods.getUserBalances().call({from:userAccount}).then(res => {
+    balances = res;
+  })
 
-  if (nftHolder) {
+  tokenBalance.innerText = `MZRO Balance: ${balances[0] / (10 ** 9)} MZRO`;
+  nftBalance.innerText = `Nfts Count: ${balances[1]}`;
+
+
+  if (!nftHolder) {
     $('body').append(`
       <section class="notHolder" id="nft">
           <h2 class="notHolder-alert text-center">You do not own any NFTS</h2>
       </section>
     `);
+  } else {
+
+    checkAllowed();
+
+  }
+
+}
+
+async function checkAllowed() {
+
+  var allowed;
+  await stakingContract.methods.checkTokenAllowed().call({from:userAccount}).then(res => {
+    allowed = res;
+  });
+
+  if (allowed == 0) {
+    $('body').append(`
+        <section class="notHolder notApproved" id="nft">
+            <h2 class="notHolder-alert text-center">Need to Approve MZRO Token</h2>
+            <button type="button" class="btn btn-success" id="approve-btn">Approve MZRO</button>
+        </section>
+    `);
+
+    $('#approve-btn').click(async function() {
+      stakingContract.methods.allowStake().send({from:userAccount}).on('receipt', () => {
+        location.reload();
+      });
+    });
+
   } else {
 
     stakingPools();
@@ -71,7 +110,7 @@ async function stakingPools() {
     staker = res;
   });
 
-  if (!staker) {
+  if (staker) {
     showUnstakingPool();
   } else {
     showStakingPools();
@@ -98,9 +137,9 @@ async function showStakingPools() {
               </div>
 
               <div class="staking-card-body">
-                  <p>APR: <span>${information[0][0] / (10 ** 9) * 365 / information[1] * 100}%</span></p>
+                  <p>APR: <span>${information[0][0] / (10 ** 9) * 365 / information[1] * 100 * 10 ** 9}%</span></p>
                   <p>Earn: <span>MZRO</span></p>
-                  <p>Stake Amount: <span>${information[1]} MZRO</span></p>
+                  <p>Stake Amount: <span>${information[1] / (10 ** 9)} MZRO</span></p>
               </div>
 
               <div class="staking-card-footer">
@@ -116,9 +155,9 @@ async function showStakingPools() {
               </div>
 
               <div class="staking-card-body">
-                  <p>APR: <span>${information[0][1] / (10 ** 9) * 365 / information[1] * 100}%</span></p>
+                  <p>APR: <span>${information[0][1] / (10 ** 9) * 365 / information[1] * 100 * 10 ** 9}%</span></p>
                   <p>Earn: <span>MZRO</span></p>
-                  <p>Stake Amount: <span>${information[1]} MZRO</span></p>
+                  <p>Stake Amount: <span>${information[1] / (10 ** 9)} MZRO</span></p>
               </div>
 
               <div class="staking-card-footer">
@@ -134,9 +173,9 @@ async function showStakingPools() {
               </div>
 
               <div class="staking-card-body">
-                  <p>APR: <span>${information[0][2] / (10 ** 9) * 365 / information[1] * 100}%</span></p>
+                  <p>APR: <span>${information[0][2] / (10 ** 9) * 365 / information[1] * 100 * 10 ** 9}%</span></p>
                   <p>Earn: <span>MZRO</span></p>
-                  <p>Stake Amount: <span>${information[1]} MZRO</span></p>
+                  <p>Stake Amount: <span>${information[1] / (10 ** 9)} MZRO</span></p>
               </div>
 
               <div class="staking-card-footer">
@@ -176,8 +215,6 @@ async function showUnstakingPool() {
     information = res;
   });
 
-  console.log(information);
-
   var stakingPeriod;
   if (information[1] == 0) {
     stakingPeriod = '30';
@@ -205,7 +242,7 @@ async function showUnstakingPool() {
               </div>
 
               <div class="staking-card-body">
-                  <p>APR: <span>${information[3] / (10 ** 9) * 365 / information[4] * 100}%</span></p>
+                  <p>APR: <span>${information[3] / (10 ** 9) * 365 / information[4] * 100 * (10 ** 9)}%</span></p>
                   <p>Earn: <span>MZRO</span></p>
                   <p>Staked Amount: <span>50 MZRO</span></p>
                   <p>Staking Status: <span>${early}</span></p>
@@ -214,11 +251,17 @@ async function showUnstakingPool() {
               </div>
 
               <div class="staking-card-footer">
-                  <button type="button" class="btn btn-warning">Unstake</button>
+                  <button type="button" class="btn btn-warning" id="unstake-btn">Unstake</button>
               </div>
           </div>
 
       </div>
   `);
+
+  $('#unstake-btn').click(async function() {
+    stakingContract.methods.unstake().send({from:userAccount}).on('receipt', () => {
+      location.reload();
+    });
+  });
 
 }

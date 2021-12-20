@@ -32,6 +32,19 @@ body {
     border-radius: 32px;
 }
 
+.header-info .balances {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.header-info p {
+    color: #fafafa;
+    text-align: center;
+    margin: 0;
+}
+
 
 /* Not Holder Alert */
 .notHolder {
@@ -48,6 +61,10 @@ body {
     font-size: 4vmin;
 }
 
+.notApproved {
+    display: flex;
+    flex-direction: column;
+}
 
 /* Card */
 .cards {

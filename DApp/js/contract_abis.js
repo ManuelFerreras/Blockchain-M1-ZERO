@@ -1,5 +1,12 @@
 var stakingAbi = [
 	{
+		"inputs": [],
+		"name": "allowStake",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -160,6 +167,19 @@ var stakingAbi = [
 	},
 	{
 		"inputs": [],
+		"name": "allowanceAmount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "checkEarlyStaker",
 		"outputs": [
 			{
@@ -192,6 +212,19 @@ var stakingAbi = [
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "checkTokenAllowed",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -269,6 +302,24 @@ var stakingAbi = [
 				"internalType": "uint256[]",
 				"name": "",
 				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getUserBalances",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
@@ -362,7 +413,7 @@ var stakingAbi = [
 		"name": "token",
 		"outputs": [
 			{
-				"internalType": "contract ERC20",
+				"internalType": "contract M1zero",
 				"name": "",
 				"type": "address"
 			}

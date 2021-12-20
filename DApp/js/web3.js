@@ -54,7 +54,7 @@ async function checkNft() {
     balances = res;
   })
 
-  tokenBalance.innerText = `MZRO Balance: ${balances[0] / (10 ** 9)} MZRO`;
+  tokenBalance.innerText = `MZRO Balance: ${balances[0] / (10 ** 9)}`;
   nftBalance.innerText = `Nfts Count: ${balances[1]}`;
 
 

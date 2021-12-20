@@ -1874,51 +1874,10 @@ contract stakingContract is Ownable {
         emit newStaker(msg.sender, block.timestamp, StakingPeriods.NINETY);
     }
 
-    function earlyUnstake() internal  {
 
-        // Get staker info
-        StakeInfo memory _info = stakersInformation[msg.sender];
+    function unstake() public onlyNftsHolders onlyStakers {
 
-        uint256 rewards_;
-        uint256 stakedDays_;
-        
-        // Rewards calculation
-        stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
-        rewards_ = stakedDays_.mul(earlyUnstakeDailyReward);
-
-        // Change staker's state
-        stakersInformation[msg.sender].stakingState = false;
-
-        // Transfer
-        require(token.balanceOf(address(this)) >= rewards_, "Contract without enough balance.");
-        token.transfer(msg.sender, rewards_);
-
-        // Trigger Event
-        emit earlyUnstakeEvent(msg.sender);
-
-    }
-
-    function normalUnstake() internal {
-        
-        // Get staker info
-        StakeInfo memory _info = stakersInformation[msg.sender];
-
-        uint256 rewards_;
-        uint256 stakedDays_;
-
-        uint256 stakingPeriodReward_;
-
-        if (_info.stakingPeriod == StakingPeriods.THIRTY) {
-            stakingPeriodReward_ = stakingThirtyDailyReturn;
-        } else if (_info.stakingPeriod == StakingPeriods.SIXTY) {
-            stakingPeriodReward_ = stakingSixtyDailyReturn;
-        } else {
-            stakingPeriodReward_ = stakingNinetyDailyReturn;
-        }
-        
-        // Rewards calculation
-        stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
-        rewards_ = stakedDays_.mul(stakingPeriodReward_);
+        uint256 rewards_ = getRewards();
 
         // Change staker's state
         stakersInformation[msg.sender].stakingState = false;
@@ -1929,16 +1888,62 @@ contract stakingContract is Ownable {
 
         // Trigger Event
         emit unstakeEvent(msg.sender, _info.stakingPeriod);
-        
+
     }
 
-    function unstake() public onlyNftsHolders onlyStakers {
 
-        if (block.timestamp < stakersInformation[msg.sender].endTimeStamp) {
-            earlyUnstake();
+    // Helper Functions 
+    function checkNftHolder() public view returns (bool) {
+        if(nfts.balanceOf(msg.sender) > 0) {
+            return true;
         } else {
-            normalUnstake();
+            return false;
         }
+    }
 
+    function checkEarlyStaker() public view returns (bool) {
+        if (stakersInformation[msg.sender].stakingState) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function getRewards() public view returns (uint256) {
+        if (block.timestamp < stakersInformation[msg.sender].endTimeStamp) {
+
+            // Get staker info
+            StakeInfo memory _info = stakersInformation[msg.sender];
+
+            uint256 rewards_;
+            uint256 stakedDays_;
+            
+            // Rewards calculation
+            stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
+            rewards_ = stakedDays_.mul(earlyUnstakeDailyReward);
+
+        } else {
+
+            // Get staker info
+            StakeInfo memory _info = stakersInformation[msg.sender];
+
+            uint256 rewards_;
+            uint256 stakedDays_;
+
+            uint256 stakingPeriodReward_;
+
+            if (_info.stakingPeriod == StakingPeriods.THIRTY) {
+                stakingPeriodReward_ = stakingThirtyDailyReturn;
+            } else if (_info.stakingPeriod == StakingPeriods.SIXTY) {
+                stakingPeriodReward_ = stakingSixtyDailyReturn;
+            } else {
+                stakingPeriodReward_ = stakingNinetyDailyReturn;
+            }
+            
+            // Rewards calculation
+            stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
+            rewards_ = stakedDays_.mul(stakingPeriodReward_);
+
+        }
     }
 }

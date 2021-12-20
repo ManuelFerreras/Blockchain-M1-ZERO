@@ -1,0 +1,55 @@
+body {
+    background-color: #262626;
+}
+
+
+/* Title */
+.title {
+    color: #fafafa;
+    height: 10vh;
+    line-height: 10vh;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+}
+
+
+/* Card */
+.cards {
+    display: flex;
+    justify-content: space-around;
+    height: 85vh;
+    margin: auto auto;
+}
+
+.staking-card {
+    margin: auto auto;
+    height: auto;
+    width: 40vh;
+    background-color: #393939;
+    border-radius: 32px;
+    box-shadow: 0 2px 4px 0 rgba(14,30,37,.12),0 2px 16px 0 rgba(14,30,37,.32);
+    padding: 2rem 1.5rem;
+    border: 1px solid rgb(0 0 0/8%);
+}
+
+.staking-card-header h2, .staking-card-header p {
+    text-align: end;
+    color: #fafafa;
+}
+
+
+.staking-card-body p {
+    color: #fafafa;
+}
+
+
+.staking-card-footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.staking-card-footer button {
+    margin: 1vmin 0;
+    width: 100%;
+    font-weight: bold;
+}

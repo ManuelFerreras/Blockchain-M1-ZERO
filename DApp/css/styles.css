@@ -1,5 +1,8 @@
 body {
-    background-color: #262626;
+    background-image: url("../img/GMS\ Army\ BG.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 

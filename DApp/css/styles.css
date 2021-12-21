@@ -6,17 +6,18 @@ body {
 /* Title */
 .title {
     color: #fafafa;
-    height: 10vh;
-    line-height: 10vh;
+    height: auto;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     grid-column: 2;
     font-size: 4vmin;
+    align-self: center;
 }
 
 
 /* Account Info */
 .header-info {
+    height: 10vh;
     width: 100%;
     position: fixed;
     top: 0;

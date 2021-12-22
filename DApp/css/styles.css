@@ -1,8 +1,14 @@
-body {
+.bg {
     background-image: url("../img/GMS\ Army\ BG.png");
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: -100;
+    top: 0;
+
 }
 
 
@@ -27,6 +33,7 @@ body {
     background-color: #393939;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    z-index: 100;
 }
 .header-info button {
     height: 30%;
@@ -128,4 +135,19 @@ body {
 
 span {
     font-weight: bold;
+}
+
+#ownedNfts {
+    width: 80%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: auto auto;
+    gap: 3vmin;
+    margin-top: 20vmin;
+    margin-bottom: 20vmin;
+}
+
+.nftCard {
+    align-self: center;
+    justify-self: center;
 }

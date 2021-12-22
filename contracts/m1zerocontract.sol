@@ -1806,6 +1806,12 @@ contract stakingContract is Ownable {
     event earlyUnstakeEvent(address);
     event unstakeEvent(address);
 
+    event newThirtyDailyReward(uint256);
+    event newSixtyDailyReward(uint256);
+    event newNinetyDailyReward(uint256);
+    event newEarlyUnstakeDailyReward(uint256);
+    event newStakingAmount(uint256);
+
 
     // Staking Enums
     enum StakingPeriods { THIRTY, SIXTY, NINETY }
@@ -1818,27 +1824,22 @@ contract stakingContract is Ownable {
         uint256 endTimeStamp;
         uint256 stakedAmount;
         StakingPeriods stakingPeriod;
-        bool stakingState;
     }
 
 
     // Mapping address => staking info 
-    mapping (address => StakeInfo) stakersInformation;
+    mapping (uint256 => StakeInfo) stakersInformation;
+    mapping (uint256 => bool) public nftStaked;
 
 
     // Modifiers
-    modifier onlyNftsHolders() {
-        require(nfts.balanceOf(msg.sender) > 0, "Not an NFT Holder.");
+    modifier onlyStakedNfts(uint256 nftId_) {
+        require(nftStaked[nftId_], "Nft is not Staked");
         _;
     }
 
-    modifier onlyStakers() {
-        require(stakersInformation[msg.sender].stakingState, "Not Staker");
-        _;
-    }
-
-    modifier onlyOnce() {
-        require(!stakersInformation[msg.sender].stakingState, "Already a staker.");
+    modifier onlyOnce(uint256 nftId_) {
+        require(!nftStaked[nftId_], "Already staking the NFT.");
         _;
     }
 
@@ -1847,75 +1848,103 @@ contract stakingContract is Ownable {
         _;
     }
 
+    modifier onlyOwnerOfNft(uint256 nftId_) {
+        require(msg.sender == nfts.ownerOf(nftId_), "Not the NFT owner.");
+        _;
+    }
+
 
     // Rewards Setter 
     function setStakingThirtyDailyReturn(uint256 newValue_) public onlyOwner {
         stakingThirtyDailyReturn = newValue_;
+
+        emit newThirtyDailyReward(newValue_);
     }
 
     function setStakingSixtyDailyReturn(uint256 newValue_) public onlyOwner {
         stakingSixtyDailyReturn = newValue_;
+
+        emit newSixtyDailyReward(newValue_);
     }
 
     function setStakingNinetyDailyReturn(uint256 newValue_) public onlyOwner {
         stakingNinetyDailyReturn = newValue_;
+
+        emit newNinetyDailyReward(newValue_);
     }
 
     function setEarlyUnstakeDailyReward(uint256 newValue_) public onlyOwner {
         earlyUnstakeDailyReward = newValue_;
+
+        emit newEarlyUnstakeDailyReward(newValue_);
+    }
+
+    function setStakingAmount(uint256 newValue_) public onlyOwner {
+        stakeAmount = newValue_;
+
+        emit newStakingAmount(newValue_);
     }
 
 
     // Stake functions
-    function stakeThirty() public onlyNftsHolders onlyOnce onlyAllowed {
+    function stakeThirty(uint256 nftId_) public onlyOwnerOfNft(nftId_) onlyOnce(nftId_) onlyAllowed {
         // Check if user has enough tokens to stake.
         require(token.balanceOf(msg.sender) >= stakeAmount, "Not Enough Balance To Stake.");
 
         // Transfer staked tokens to this address.
         token.transferFrom(msg.sender, address(this), stakeAmount);
 
+        // Set NFT as Used 
+        nftStaked[nftId_] = true;
+
         // Update user's information.
-        stakersInformation[msg.sender] = StakeInfo(block.timestamp, block.timestamp.add(30 days), stakeAmount, StakingPeriods.THIRTY, true);
+        stakersInformation[nftId_] = StakeInfo(block.timestamp, block.timestamp.add(30 days), stakeAmount, StakingPeriods.THIRTY);
 
         // Trigger Events
         emit newStaker(msg.sender, block.timestamp, StakingPeriods.THIRTY);
     }
 
-    function stakeSixty() public onlyNftsHolders onlyOnce onlyAllowed {
+    function stakeSixty(uint256 nftId_) public onlyOwnerOfNft(nftId_) onlyOnce(nftId_) onlyAllowed {
         // Check if user has enough tokens to stake.
         require(token.balanceOf(msg.sender) >= stakeAmount, "Not Enough Balance To Stake.");
 
         // Transfer staked tokens to this address.
         token.transferFrom(msg.sender, address(this), stakeAmount);
 
+        // Set NFT as Used 
+        nftStaked[nftId_] = true;
+
         // Update user's information.
-        stakersInformation[msg.sender] = StakeInfo(block.timestamp, block.timestamp.add(60 days), stakeAmount, StakingPeriods.SIXTY, true);
+        stakersInformation[nftId_] = StakeInfo(block.timestamp, block.timestamp.add(60 days), stakeAmount, StakingPeriods.SIXTY);
 
         // Trigger Events
         emit newStaker(msg.sender, block.timestamp, StakingPeriods.SIXTY);
     }
 
-    function stakeNinety() public onlyNftsHolders onlyOnce onlyAllowed {
+    function stakeNinety(uint256 nftId_) public onlyOwnerOfNft(nftId_) onlyOnce(nftId_) onlyAllowed {
         // Check if user has enough tokens to stake.
         require(token.balanceOf(msg.sender) >= stakeAmount, "Not Enough Balance To Stake.");
 
         // Transfer staked tokens to this address.
         token.transferFrom(msg.sender, address(this), stakeAmount);
 
+        // Set NFT as Used 
+        nftStaked[nftId_] = true;
+
         // Update user's information.
-        stakersInformation[msg.sender] = StakeInfo(block.timestamp, block.timestamp.add(90 days), stakeAmount, StakingPeriods.NINETY, true);
+        stakersInformation[nftId_] = StakeInfo(block.timestamp, block.timestamp.add(90 days), stakeAmount, StakingPeriods.NINETY);
 
         // Trigger Events
         emit newStaker(msg.sender, block.timestamp, StakingPeriods.NINETY);
     }
 
 
-    function unstake() public onlyNftsHolders onlyStakers {
+    function unstake(uint256 nftId_) public onlyOwnerOfNft(nftId_) onlyStakedNfts(nftId_) {
 
-        uint256 rewards_ = getRewards();
+        uint256 rewards_ = getRewards(nftId_);
 
         // Change staker's state
-        stakersInformation[msg.sender].stakingState = false;
+        nftStaked[nftId_] = false;
 
         // Transfer
         require(token.balanceOf(address(this)) >= rewards_, "Contract without enough balance.");
@@ -1936,16 +1965,8 @@ contract stakingContract is Ownable {
         }
     }
 
-    function checkEarlyStaker() public view returns (bool) {
-        if (stakersInformation[msg.sender].stakingState) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function checkStaker() public view returns (bool) {
-        if (stakersInformation[msg.sender].stakingState) {
+    function checkStaker(uint256 nftId_) public view returns (bool) {
+        if (nftStaked[nftId_]) {
             return true;
         } else {
             return false;
@@ -1973,12 +1994,12 @@ contract stakingContract is Ownable {
         return(poolRewards_, stakeAmount);
     }
 
-    function getStakerPoolInformation() public view returns (bool, StakingPeriods, uint256, uint256, uint256, uint256) {
+    function getNftStakedInformation(uint256 nftId_) public view returns (bool, StakingPeriods, uint256, uint256, uint256, uint256) {
 
-        if (block.timestamp < stakersInformation[msg.sender].endTimeStamp) {
+        if (block.timestamp < stakersInformation[nftId_].endTimeStamp) {
 
             // Get staker info
-            StakeInfo memory _info = stakersInformation[msg.sender];
+            StakeInfo memory _info = stakersInformation[nftId_];
 
             uint256 rewards_;
             uint256 stakedDays_;
@@ -1995,14 +2016,14 @@ contract stakingContract is Ownable {
             
             // Rewards calculation
             stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
-            rewards_ = stakedDays_.mul(earlyUnstakeDailyReward).add(stakeAmount);
+            rewards_ = stakedDays_.mul(earlyUnstakeDailyReward).add(_info.stakedAmount);
 
-            return (false, _info.stakingPeriod, rewards_, stakingPeriodReward_, stakeAmount, stakedDays_);            
+            return (false, _info.stakingPeriod, rewards_, stakingPeriodReward_, _info.stakedAmount, stakedDays_);            
 
         } else {
 
             // Get staker info
-            StakeInfo memory _info = stakersInformation[msg.sender];
+            StakeInfo memory _info = stakersInformation[nftId_];
 
             uint256 rewards_;
             uint256 stakedDays_;
@@ -2019,33 +2040,33 @@ contract stakingContract is Ownable {
             
             // Rewards calculation
             stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
-            rewards_ = stakedDays_.mul(stakingPeriodReward_).add(stakeAmount);
+            rewards_ = stakedDays_.mul(stakingPeriodReward_).add(_info.stakedAmount);
 
-            return (true, _info.stakingPeriod, rewards_, stakingPeriodReward_, stakeAmount, stakedDays_);  
+            return (true, _info.stakingPeriod, rewards_, stakingPeriodReward_, _info.stakedAmount, stakedDays_);  
 
         }
 
     }
 
-    function getRewards() public view returns (uint256) {
-        if (block.timestamp < stakersInformation[msg.sender].endTimeStamp) {
+    function getRewards(uint256 nftId_) public view returns (uint256) {
+        if (block.timestamp < stakersInformation[nftId_].endTimeStamp) {
 
             // Get staker info
-            StakeInfo memory _info = stakersInformation[msg.sender];
+            StakeInfo memory _info = stakersInformation[nftId_];
 
             uint256 rewards_;
             uint256 stakedDays_;
             
             // Rewards calculation
             stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
-            rewards_ = stakedDays_.mul(earlyUnstakeDailyReward).add(stakeAmount);
+            rewards_ = stakedDays_.mul(earlyUnstakeDailyReward).add(_info.stakedAmount);
 
             return rewards_;            
 
         } else {
 
             // Get staker info
-            StakeInfo memory _info = stakersInformation[msg.sender];
+            StakeInfo memory _info = stakersInformation[nftId_];
 
             uint256 rewards_;
             uint256 stakedDays_;
@@ -2062,10 +2083,11 @@ contract stakingContract is Ownable {
             
             // Rewards calculation
             stakedDays_ = (block.timestamp - _info.startTimeStamp - ( block.timestamp - _info.startTimeStamp ) % 1 days) / 1 days;
-            rewards_ = stakedDays_.mul(stakingPeriodReward_).add(stakeAmount);
+            rewards_ = stakedDays_.mul(stakingPeriodReward_).add(_info.stakedAmount);
 
             return rewards_;
 
         }
     }
+
 }

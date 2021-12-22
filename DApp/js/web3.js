@@ -1,12 +1,33 @@
-const stakingAddress = "0x230d65Fd723124F1383A2d79683D06f7E3eC4284";
+const stakingAddress = "0xE76A217736D2F1B166Dbf814098E5F0B7b398462";
 var stakingContract;
 
+const nftContractAddress = "0xf37fffd3Fd47d783fE24aA823368877EFa1DA92D";
+var nftContract;
+
 var userAccount;
+
+var ownerNftsIds;
+var basePinataGatewayUrl = "https://gateway.pinata.cloud/ipfs/";
 
 const loginButton = document.querySelector('#loginBtn');
 const tokenBalance = document.querySelector('#token-balance');
 const nftBalance = document.querySelector('#nft-balance');
 
+
+var getJSON = function(url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'json';
+  xhr.onload = function() {
+    var status = xhr.status;
+    if (status === 200) {
+      callback(null, xhr.response);
+    } else {
+      callback(status, xhr.response);
+    }
+  };
+  xhr.send();
+};
 
 addEventListener('load', async function() {
    loginButton.addEventListener('click', async function() {
@@ -19,7 +40,7 @@ async function login() {
         web3js = new Web3(window.ethereum);
   
         await web3js.eth.net.getId().then(res => {
-            if (res != 137) {
+            if (res != 3) {
                 alert("Please Connect to Polygon Network");
             }
         });
@@ -33,6 +54,7 @@ async function login() {
 
         $('#login').remove();
         stakingContract = new web3js.eth.Contract(stakingAbi, stakingAddress);
+        nftContract = new web3js.eth.Contract(nftContractAbi, nftContractAddress);
         checkNft();
     
     } else {
@@ -55,10 +77,10 @@ async function showAddress() {
 
 async function checkNft() {
   
-  var nftHolder;
+  var ownerNfts;
   
-  await stakingContract.methods.checkNftHolder().call({from:userAccount}).then(res => {
-    nftHolder = res;
+  await nftContract.methods.walletOfOwner(userAccount).call({from:userAccount}).then(res => {
+    ownerNfts = res;
   });
 
   var balances;
@@ -70,7 +92,7 @@ async function checkNft() {
   nftBalance.innerText = `Nfts Count: ${balances[1]}`;
 
 
-  if (!nftHolder) {
+  if (balances[1] == 0) {
     $('body').append(`
       <section class="notHolder" id="nft">
           <h2 class="notHolder-alert text-center">You do not own any NFTS</h2>
@@ -116,16 +138,45 @@ async function checkAllowed() {
 
 async function stakingPools() {
 
-  var staker;
-
-  await stakingContract.methods.checkStaker().call({from:userAccount}).then(res => {
-    staker = res;
+  var nfts;
+  
+  await nftContract.methods.walletOfOwner(userAccount).call({from:userAccount}).then(res => {
+    nfts = res;
   });
+  console.log(nfts);
 
-  if (staker) {
-    showUnstakingPool();
-  } else {
-    showStakingPools();
+  $('body').append(`
+    <div id="ownedNfts"></div>
+  `);
+
+  for (var nft in nfts) {
+    var nftInfo; 
+    
+    await nftContract.methods.tokenURI(nft).call({from:userAccount}).then(res => {
+      nftInfo = res;
+    });
+    console.log(nftInfo);
+
+    if (nft != 0) {
+      nftInfo = nftInfo.replace('ipfs://', '');
+      var response = await fetch(`https://ipfs.io/ipfs/${nftInfo}`);
+      var json = await response.json();
+      var image = "https://ipfs.io/ipfs/" + json.image.replace('ipfs://', '');
+      console.log(json);
+
+      $('#ownedNfts').append(`
+      
+      <div class="card nftCard" style="width: 18rem;">
+        <img class="card-img-top" src="${image}" alt="Card image cap">
+        <div class="card-body">
+          <h5 class="card-title">${json.name}</h5>
+          <p class="card-text">${json.description}</p>
+          <a href="#" class="btn btn-primary">Go somewhere</a>
+        </div>
+      </div>
+      
+      `);
+    }
   }
 
 }

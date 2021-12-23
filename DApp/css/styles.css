@@ -96,12 +96,12 @@
 .cards {
     display: flex;
     justify-content: space-around;
-    height: 100vh;
+    height: auto;
     margin: auto auto;
 }
 
 .staking-card {
-    margin: auto auto;
+    margin: auto 2vmin;
     height: auto;
     width: 40vh;
     background-color: #393939;
@@ -150,4 +150,46 @@ span {
 .nftCard {
     align-self: center;
     justify-self: center;
+}
+.nftCard .btn {
+    width: 100%;
+}
+
+
+/* Stake Menu */
+.stakeMenu {
+
+    position: fixed;
+    top: 10vh;
+    margin: auto auto;
+    z-index: 99;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+
+
+}
+
+.stakeMenu h3 {
+    color: #fafafa;
+    font-size: 4vmin;
+    grid-row: 1;
+    align-self: center;
+    grid-column: 2;
+}
+
+.stakeMenuHeader {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.cross {
+    font-size: 5vmin;
+    color: #fafafa;
+    grid-column: 3;
+    align-self: center;
+    justify-self: center;
+    cursor: pointer;
 }

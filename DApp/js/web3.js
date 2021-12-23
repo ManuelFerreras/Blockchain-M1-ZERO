@@ -41,7 +41,7 @@ async function login() {
         web3js = new Web3(window.ethereum);
   
         await web3js.eth.net.getId().then(res => {
-            if (res != 3) {
+            if (res != 137) {
                 alert("Please Connect to Polygon Network");
             }
         });

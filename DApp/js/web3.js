@@ -1,7 +1,7 @@
-const stakingAddress = "0xE76A217736D2F1B166Dbf814098E5F0B7b398462";
+const stakingAddress = "0x29a59426807BC3DbC614FB5e42AA9BE38A380a27";
 var stakingContract;
 
-const nftContractAddress = "0xf37fffd3Fd47d783fE24aA823368877EFa1DA92D";
+const nftContractAddress = "0x42845A65e16E3AEd767C13a8500cd791DF81c892";
 var nftContract;
 
 var userAccount;
@@ -41,7 +41,7 @@ async function login() {
         web3js = new Web3(window.ethereum);
   
         await web3js.eth.net.getId().then(res => {
-            if (res != 3) {
+            if (res != 137) {
                 alert("Please Connect to Polygon Network");
             }
         });

@@ -4,11 +4,13 @@ var stakingContract;
 const nftContractAddress = "0x42845A65e16E3AEd767C13a8500cd791DF81c892";
 var nftContract;
 
+const airdropContractAddress = "";
+var airdropContract;
+
 var userAccount;
 var menuOpened = false;
 
 var ownerNftsIds;
-var basePinataGatewayUrl = "https://gateway.pinata.cloud/ipfs/";
 
 const loginButton = document.querySelector('#loginBtn');
 const tokenBalance = document.querySelector('#token-balance');
@@ -56,6 +58,7 @@ async function login() {
         $('#login').remove();
         stakingContract = new web3js.eth.Contract(stakingAbi, stakingAddress);
         nftContract = new web3js.eth.Contract(nftContractAbi, nftContractAddress);
+        airdropContract = new web3js.eth.Contract(airdropContractAbi, airdropContractAddress);
         checkNft();
     
     } else {
@@ -68,7 +71,7 @@ async function login() {
 async function showAddress() {
 
   $('#loginBtn').remove();
-  $('#header-info').append(`
+  $('#top').append(`
     <p class="account-address">${userAccount.substring(0, 4) + "..." + userAccount.substring(userAccount.length - 6, userAccount.length)}</p>
   `);
 
@@ -93,7 +96,7 @@ async function checkNft() {
   nftBalance.innerText = `Nfts Count: ${balances[1]}`;
 
 
-  if (balances[1] == 0) {
+  if (balances[1] == 0) { 
     $('body').append(`
       <section class="notHolder" id="nft">
           <h2 class="notHolder-alert text-center">You do not own any NFTS</h2>
@@ -114,7 +117,7 @@ async function checkAllowed() {
     allowed = res;
   });
 
-  if (allowed == 0) {
+  if (allowed == 0) { 
     $('body').append(`
         <section class="notHolder notApproved" id="nft">
             <h2 class="notHolder-alert text-center">Need to Approve MZRO Token</h2>
@@ -138,6 +141,7 @@ async function checkAllowed() {
 
 
 async function stakingPools() {
+  $(`#ownedNfts`).remove();
 
   var nfts;
   
@@ -151,17 +155,23 @@ async function stakingPools() {
 
   for (var nft in nfts) {
     var nftInfo; 
+    var nftId;
+
+    await nftContract.methods.tokenOfOwnerByIndex(userAccount, nft).call({from: userAccount}).then(res => {
+      nftId = res;
+    })
     
-    await nftContract.methods.tokenURI(nft).call({from:userAccount}).then(res => {
+    await nftContract.methods.tokenURI(nftId).call({from:userAccount}).then(res => {
       nftInfo = res;
     });
-    if (nft != 0) {
+
+    if (nftId != 0) {
       nftInfo = nftInfo.replace('ipfs://', '');
       var response = await fetch(`https://ipfs.io/ipfs/${nftInfo}`);
       var json = await response.json();
       var image = "https://ipfs.io/ipfs/" + json.image.replace('ipfs://', '');
       var nftStaked;
-      await stakingContract.methods.checkStaker(nft).call({from:userAccount}).then(res => {
+      await stakingContract.methods.checkStaker(nftId).call({from:userAccount}).then(res => {
         nftStaked = res;
       });
 
@@ -174,7 +184,7 @@ async function stakingPools() {
             <div class="card-body">
               <h5 class="card-title">${json.name}</h5>
               <p class="card-text">${json.description}</p>
-              <a href="#" class="btn btn-primary btnStakeNft" data-val="${nft}">Stake</a>
+              <a href="#" class="btn btn-primary btnStakeNft" data-val="${nftId}">Stake</a>
             </div>
           </div>
         
@@ -191,7 +201,7 @@ async function stakingPools() {
             <div class="card-body">
               <h5 class="card-title">${json.name}</h5>
               <p class="card-text">${json.description}</p>
-              <a href="#" class="btn btn-warning btnStakeInfoNft" data-val="${nft}">Stake Information</a>
+              <a href="#" class="btn btn-warning btnStakeInfoNft" data-val="${nftId}">Stake Information</a>
             </div>
           </div>
         
@@ -211,6 +221,103 @@ async function stakingPools() {
     openStakeInfoMenu($(e.currentTarget).data('val'));
   });
 
+  $(`#airdrop`).click((e) => {
+    openAirdrop();
+    $(`#airdrop`).unbind();
+
+    $(`#staking`).removeClass("selected");
+    $(`#airdrop`).addClass("selected");
+  });
+
+}
+
+async function openAirdrop() {
+  $(`#ownedNfts`).remove();
+
+  var nfts;
+  
+  await nftContract.methods.walletOfOwner(userAccount).call({from:userAccount}).then(res => {
+    nfts = res;
+  });
+
+  $('body').append(`
+    <div id="ownedNfts"></div>
+  `);
+
+  for (var nft in nfts) {
+    var nftInfo; 
+    var nftId;
+
+    await nftContract.methods.tokenOfOwnerByIndex(userAccount, nft).call({from: userAccount}).then(res => {
+      nftId = res;
+    })
+    
+    await nftContract.methods.tokenURI(nftId).call({from:userAccount}).then(res => {
+      nftInfo = res;
+    });
+
+    if (nftId != 0) {
+      nftInfo = nftInfo.replace('ipfs://', '');
+      var response = await fetch(`https://ipfs.io/ipfs/${nftInfo}`);
+      var json = await response.json();
+      var image = "https://ipfs.io/ipfs/" + json.image.replace('ipfs://', '');
+      var nftStaked;
+      await airdropContract.methods.isElegible(nftId).call({from:userAccount}).then(res => {
+        nftStaked = res;
+      });
+
+      if (nftStaked) {
+
+        $('#ownedNfts').append(`
+      
+          <div class="card nftCard" style="width: 18rem;">
+            <img class="card-img-top" src="${image}" alt="Card image cap">
+            <div class="card-body">
+              <h5 class="card-title">${json.name}</h5>
+              <p class="card-text">${json.description}</p>
+              <a href="#" class="btn btn-primary btnClaimAirdropNft" data-val="${nftId}">Claim Tokens</a>
+            </div>
+          </div>
+        
+        `);
+
+        
+
+      } else {
+
+        $('#ownedNfts').append(`
+      
+          <div class="card nftCard" style="width: 18rem;">
+            <img class="card-img-top" src="${image}" alt="Card image cap">
+            <div class="card-body">
+              <h5 class="card-title">${json.name}</h5>
+              <p class="card-text">${json.description}</p>
+              <a href="#" class="btn btn-secondary" data-val="${nftId}">Already Claimmed</a>
+            </div>
+          </div>
+        
+        `);
+
+        
+      }
+      
+    }
+  }
+
+  $(`#staking`).click((e) => {
+    stakingPools();
+    $(`#staking`).unbind();
+
+    $(`#staking`).addClass("selected");
+    $(`#airdrop`).removeClass("selected");
+  });
+
+  $(`.btnClaimAirdropNft`).click(async e => {
+    $(`.btnClaimAirdropNft`).unbind();
+    await airdropContract.methods.claimAirdrop($(e.currentTarget).data('val')).send({from: userAccount}).on('receipt', () => {
+      openAirdrop();
+    })
+  })
 }
 
 async function openStakeMenu(nftId_) {
